@@ -23,8 +23,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation(group = "io.moquette", name = "moquette-broker", version = "0.12.1")
-    implementation(group = "org.eclipse.paho", name = "org.eclipse.paho.client.mqttv3", version = "1.2.2")
-    implementation(group = "org.iq80.leveldb", name = "leveldb", version = "0.12")
+    implementation(group = "org.zeromq", name = "jeromq", version = "0.5.1")
 }
 
 ktlint {
