@@ -1,8 +1,9 @@
 package gateway.controller
 
-import java.io.File
 import org.iq80.leveldb.Options
+import org.iq80.leveldb.impl.Iq80DBFactory
 import org.iq80.leveldb.impl.Iq80DBFactory.*
+import java.io.File
 
 class InnerDatabaseImpl : InnerDatabase {
     val dbPath = "controller_database"
@@ -30,6 +31,6 @@ class InnerDatabaseImpl : InnerDatabase {
     }
 
     override fun resetDb() {
-        factory.destroy(File(dbPath), options)
+        factory.destroy(File(dbPath), options);
     }
 }
