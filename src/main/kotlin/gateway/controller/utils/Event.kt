@@ -1,4 +1,4 @@
-package gateway.controller
+package gateway.controller.utils
 
 class Event {
     val thread: Thread = Thread.currentThread()

@@ -1,8 +1,11 @@
 package gateway.controller
 
+import gateway.controller.utils.Event
 import gateway.controller.utils.Queue
 import gateway.controller.utils.RingBuffer
 import gateway.controller.utils.ThreadFactory
+import gateway.controller.workers.Orchestrator
+import gateway.controller.workers.WebApi
 
 class Master : Runnable {
     private val threadMap = mutableMapOf<Thread, ThreadFactory>()
@@ -14,7 +17,7 @@ class Master : Runnable {
     // source of events to know when to restart which thread
     private val eventSource = Queue(true)
 
-    override fun run() {
+    override fun run(): Nothing {
         arrayOf<ThreadFactory>(
             { Thread(WebApi(it), "WebApi") },
             { Thread(Orchestrator(it), "Orchestrator") }
