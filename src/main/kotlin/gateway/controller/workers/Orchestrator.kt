@@ -1,8 +1,8 @@
-package gateway.controller
+package gateway.controller.workers
 
 import gateway.controller.utils.Queue
 
-class WebApi(private val queue: Queue) : Runnable {
+class Orchestrator(queue: Queue) : AbstractWorker(queue) {
     override fun run() {
         TODO("Not yet implemented")
     }
