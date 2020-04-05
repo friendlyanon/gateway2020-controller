@@ -18,4 +18,4 @@ stages:
 test_and_build:
   stage: aio
   script:
-    - ./gradlew check assemble
+    - ./gradlew check
