@@ -22,8 +22,10 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation(group = "io.moquette", name = "moquette-broker", version = "0.12.1")
-    implementation(group = "org.zeromq", name = "jeromq", version = "0.5.1")
+    implementation("io.moquette:moquette-broker:0.12.1")
+    implementation("org.zeromq:jeromq:0.5.1")
+    implementation("com.h2database:h2:1.4.200")
+    implementation("mysql:mysql-connector-java:8.0.19")
 }
 
 ktlint {

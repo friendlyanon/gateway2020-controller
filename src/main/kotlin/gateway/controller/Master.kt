@@ -1,64 +1,37 @@
 package gateway.controller
 
-import gateway.controller.utils.Event
+import gateway.controller.events.handlers.MasterEventHandler
+import gateway.controller.storage.Storage
 import gateway.controller.utils.Queue
-import gateway.controller.utils.RingBuffer
-import gateway.controller.utils.ThreadFactory
 import gateway.controller.workers.Orchestrator
 import gateway.controller.workers.WebApi
+import gateway.controller.workers.WorkerContainer
 
-class Master : Runnable {
-    private val threadMap = mutableMapOf<Thread, ThreadFactory>()
+class Master(val localStorage: Storage) : Runnable {
+    val webApi: WorkerContainer
+    val orchestrator: WorkerContainer
 
-    // we keep track of the times when threads request a restart and if this
-    // happens too many times in a given period, then we handle that
-    private val dateMap = mutableMapOf<ThreadFactory, RingBuffer<Long>>()
+    lateinit var remoteStorage: Storage
 
     // source of events to know when to restart which thread
     private val eventSource = Queue(true)
 
+    init {
+        val q = eventSource
+        webApi = WorkerContainer("WebApi") { WebApi(q) }
+        orchestrator = WorkerContainer("Orchestrator") { Orchestrator(q) }
+    }
+
     override fun run(): Nothing {
-        arrayOf<ThreadFactory>(
-            { Thread(WebApi(it), "WebApi") },
-            { Thread(Orchestrator(it), "Orchestrator") }
-        ).map {
-            dateMap[it] = RingBuffer(dateSampleSize)
-            it(eventSource).apply { threadMap[this] = it }
-        }.forEach { it.start() }
+        orchestrator.initThread()
 
+        // we only start the Web API's thread for now, then wait on it to start
+        // running the web server
+        webApi.restart()
+
+        val handler = MasterEventHandler(this)
         while (true) {
-            onRestartEvent(eventSource.take())
+            handler.onEvent(eventSource.take())
         }
-    }
-
-    private fun onRestartEvent(event: Event) {
-        val (thread) = event
-        println("Thread ${thread.name} requested a restart")
-
-        // if the thread requested a restart, then it should have already
-        // prepared to shut down, calling to interrupt only to make sure
-        thread.interrupt()
-
-        // events should come only from threads that are in the map, so these
-        // can't be null
-        val factory = threadMap.remove(thread)!!
-        val dateBuffer = dateMap[factory]!!
-        if (dateBuffer.size == dateSampleSize) {
-            val difference = dateBuffer[dateSampleSize - 1] - dateBuffer[0]
-            if (difference < restartPeriodMillis) {
-                TODO("Too many restarts requested, something is wrong")
-            }
-        }
-
-        factory(eventSource).also { threadMap[it] = factory }.apply {
-            start()
-            println("Thread $name was restarted")
-        }
-    }
-
-    companion object {
-        // 5 restarts in 30 seconds might be indicative of an error
-        const val dateSampleSize = 5
-        const val restartPeriodMillis = 30_000
     }
 }
