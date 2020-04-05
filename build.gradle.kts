@@ -21,11 +21,14 @@ repositories {
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
-    implementation("io.moquette:moquette-broker:0.12.1")
-    implementation("org.zeromq:jeromq:0.5.1")
-    implementation("com.h2database:h2:1.4.200")
-    implementation("mysql:mysql-connector-java:8.0.19")
+    listOf(
+        kotlin("stdlib-jdk8"),
+        "org.zeromq:jeromq:0.5.1",
+        "com.h2database:h2:1.4.200",
+        "org.nanohttpd:nanohttpd:2.3.1",
+        "mysql:mysql-connector-java:8.0.19",
+        "com.fasterxml.jackson.module:jackson-module-kotlin:2.10.3"
+    ).forEach { implementation(it) }
 }
 
 ktlint {
@@ -59,5 +62,6 @@ tasks {
         destinationDirectory.set(File(projectDir, "./build/"))
         mergeServiceFiles()
         dependsOn(relocate)
+        minimize()
     }
 }
