@@ -4,10 +4,9 @@ import gateway.controller.Master
 import gateway.controller.events.*
 import gateway.controller.events.ConnectionRequestEvent.Type.LOCAL
 import gateway.controller.events.ConnectionRequestEvent.Type.REMOTE
-import gateway.controller.workers.WorkerContainer
 
 class MasterEventHandler(private val master: Master) {
-    private val containers: MutableMap<String, WorkerContainer> = mutableMapOf(
+    private val containers = mutableMapOf(
         master.webApi.name to master.webApi,
         master.orchestrator.name to master.orchestrator
     )
@@ -17,7 +16,7 @@ class MasterEventHandler(private val master: Master) {
         is ConnectionRequestEvent -> onConnectionRequest(event)
         is RestartEvent -> onRestart(event)
         is SettingsChangedEvent -> onSettingsChanged(event)
-        else -> throw EventException("Not a master thread event $event")
+        else -> throw EventException("Not a master thread event", event)
     }
 
     private fun onApiRunning(event: ApiRunningEvent) {

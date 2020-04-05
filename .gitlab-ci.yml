@@ -13,9 +13,9 @@ cache:
     - build
 
 stages:
-  - aio
+  - test
 
-test_and_build:
-  stage: aio
+check:
+  stage: test
   script:
     - ./gradlew check

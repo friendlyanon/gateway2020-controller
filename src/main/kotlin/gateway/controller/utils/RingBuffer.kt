@@ -1,6 +1,6 @@
 package gateway.controller.utils
 
-class RingBuffer<T> : Iterable<T>, /* List<T>, */ Cloneable {
+class RingBuffer<T> : Iterable<T>, /* MutableList<T>, */ Cloneable {
     val capacity: Int
     var size: Int = 0
         private set
