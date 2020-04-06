@@ -10,13 +10,14 @@ import gateway.controller.events.orchestrator.ConnectionEvent
 import gateway.controller.events.webapi.StatusEvent
 
 class MasterEventHandler(private val master: Master) {
+    // TODO add more statuses
     enum class Status {
         INITIAL;
 
         override fun toString() = name.toLowerCase()
     }
 
-    val status = Status.INITIAL
+    private val status = Status.INITIAL
 
     private val containers = mutableMapOf(
         master.webApi.name to master.webApi,
@@ -29,7 +30,7 @@ class MasterEventHandler(private val master: Master) {
         is InquireStatusEvent -> onInquireStatus(event)
         is RestartEvent -> onRestart(event)
         is SettingsChangedEvent -> onSettingsChanged(event)
-        else -> throw EventException("Not a master thread event", event)
+        else -> throw EventException("Not a master event", event)
     }
 
     private fun onInquireStatus(event: InquireStatusEvent) {
