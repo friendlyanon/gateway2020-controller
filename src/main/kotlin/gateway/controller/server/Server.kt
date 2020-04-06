@@ -2,19 +2,19 @@ package gateway.controller.server
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import fi.iki.elonen.NanoHTTPD
+import gateway.controller.events.master.InquireStatusEvent
+import gateway.controller.events.webapi.StatusEvent
+import gateway.controller.utils.Queue
 import gateway.controller.workers.WebApi
 
-class Server(val parent: WebApi) : NanoHTTPD(8080) {
+class Server(private val parent: WebApi, port: Int) : NanoHTTPD(port) {
     val mapper = jacksonObjectMapper()
-
-    init {
-        start(SOCKET_READ_TIMEOUT, false)
-    }
 
     override fun serve(session: IHTTPSession): Response {
         try {
-            super.serve(session)?.let { return it }
+            dispatch(session)?.let { return it }
         } catch (e: Throwable) {
+            // TODO error logging maybe
             return jsonResponse(status = Response.Status.INTERNAL_ERROR)
         }
 
@@ -22,19 +22,13 @@ class Server(val parent: WebApi) : NanoHTTPD(8080) {
     }
 
     @Suppress("NON_EXHAUSTIVE_WHEN")
-    override fun serve(
-        uri: String,
-        method: Method,
-        headers: Map<String, String>,
-        params: Map<String, String>,
-        files: Map<String, String>
-    ): Response? {
-        when (method) {
-            Method.GET -> when (uri) {
+    private fun dispatch(session: IHTTPSession): Response? {
+        when (session.method) {
+            Method.GET -> when (session.uri) {
                 "/api/status" -> return getStatus()
             }
-            Method.POST -> when (uri) {
-                "/api/settings" -> return postSettings()
+            Method.POST -> when (session.uri) {
+                "/api/settings" -> return postSettings(parseBody(session))
             }
         }
 
@@ -42,10 +36,13 @@ class Server(val parent: WebApi) : NanoHTTPD(8080) {
     }
 
     private fun getStatus(): Response {
-        TODO("Not yet implemented")
+        val queue = Queue()
+        parent.offer(InquireStatusEvent(queue))
+        val event = queue.take() as StatusEvent
+        return jsonResponse("""{"status":"${event.status}"}""")
     }
 
-    private fun postSettings(): Response {
+    private fun postSettings(json: String): Response {
         TODO("Not yet implemented")
     }
 
@@ -53,4 +50,9 @@ class Server(val parent: WebApi) : NanoHTTPD(8080) {
         json: String = "{}",
         status: Response.Status = Response.Status.OK
     ) = newFixedLengthResponse(status, "application/json", json)
+
+    private fun parseBody(session: IHTTPSession): String {
+        val stream = session.inputStream
+        TODO()
+    }
 }

@@ -8,7 +8,7 @@ import gateway.controller.workers.Orchestrator
 import gateway.controller.workers.WebApi
 import gateway.controller.workers.WorkerContainer
 
-class Master(val localStorage: Storage) : Runnable {
+class Master(port: Int, val localStorage: Storage) : Runnable {
     val webApi: WorkerContainer
     val orchestrator: WorkerContainer
 
@@ -19,7 +19,7 @@ class Master(val localStorage: Storage) : Runnable {
 
     init {
         val q = eventSource
-        webApi = WorkerContainer("WebApi") { WebApi(q) }
+        webApi = WorkerContainer("WebApi") { WebApi(q, port) }
         orchestrator = WorkerContainer("Orchestrator") { Orchestrator(q) }
     }
 

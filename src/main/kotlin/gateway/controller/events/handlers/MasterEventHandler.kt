@@ -1,11 +1,23 @@
 package gateway.controller.events.handlers
 
 import gateway.controller.Master
-import gateway.controller.events.*
-import gateway.controller.events.ConnectionRequestEvent.Type.LOCAL
-import gateway.controller.events.ConnectionRequestEvent.Type.REMOTE
+import gateway.controller.events.Event
+import gateway.controller.events.EventException
+import gateway.controller.events.master.*
+import gateway.controller.events.master.ConnectionRequestEvent.Type.LOCAL
+import gateway.controller.events.master.ConnectionRequestEvent.Type.REMOTE
+import gateway.controller.events.orchestrator.ConnectionEvent
+import gateway.controller.events.webapi.StatusEvent
 
 class MasterEventHandler(private val master: Master) {
+    enum class Status {
+        INITIAL;
+
+        override fun toString() = name.toLowerCase()
+    }
+
+    val status = Status.INITIAL
+
     private val containers = mutableMapOf(
         master.webApi.name to master.webApi,
         master.orchestrator.name to master.orchestrator
@@ -14,9 +26,14 @@ class MasterEventHandler(private val master: Master) {
     fun onEvent(event: Event) = when (event) {
         is ApiRunningEvent -> onApiRunning(event)
         is ConnectionRequestEvent -> onConnectionRequest(event)
+        is InquireStatusEvent -> onInquireStatus(event)
         is RestartEvent -> onRestart(event)
         is SettingsChangedEvent -> onSettingsChanged(event)
         else -> throw EventException("Not a master thread event", event)
+    }
+
+    private fun onInquireStatus(event: InquireStatusEvent) {
+        event.port.offer(StatusEvent(status))
     }
 
     private fun onApiRunning(event: ApiRunningEvent) {

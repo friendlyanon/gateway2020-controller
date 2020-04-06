@@ -6,3 +6,4 @@ import java.util.concurrent.SynchronousQueue
 
 typealias Queue = SynchronousQueue<Event>
 typealias WorkerFactory = () -> AbstractWorker
+typealias Bag = Map<String, String>
