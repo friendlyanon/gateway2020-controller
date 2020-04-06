@@ -21,6 +21,7 @@ repositories {
 }
 
 dependencies {
+    // TODO add a logging library
     listOf(
         kotlin("stdlib-jdk8"),
         "org.zeromq:jeromq:0.5.1",

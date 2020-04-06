@@ -2,9 +2,11 @@ package gateway.controller.server
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import fi.iki.elonen.NanoHTTPD
+import gateway.controller.events.EventException
 import gateway.controller.events.master.InquireStatusEvent
 import gateway.controller.events.webapi.StatusEvent
 import gateway.controller.utils.Queue
+import gateway.controller.utils.cast
 import gateway.controller.workers.WebApi
 
 class Server(private val parent: WebApi, port: Int) : NanoHTTPD(port) {
@@ -14,7 +16,7 @@ class Server(private val parent: WebApi, port: Int) : NanoHTTPD(port) {
         try {
             dispatch(session)?.let { return it }
         } catch (e: Throwable) {
-            // TODO error logging maybe
+            // TODO log the error
             return jsonResponse(status = Response.Status.INTERNAL_ERROR)
         }
 
@@ -38,8 +40,11 @@ class Server(private val parent: WebApi, port: Int) : NanoHTTPD(port) {
     private fun getStatus(): Response {
         val queue = Queue()
         parent.offer(InquireStatusEvent(queue))
-        val event = queue.take() as StatusEvent
-        return jsonResponse("""{"status":"${event.status}"}""")
+        val event = queue.take()
+        return when (val status = event.cast<StatusEvent>()) {
+            null -> throw EventException("Not a status event", event)
+            else -> jsonResponse("""{"status":"${status.status}"}""")
+        }
     }
 
     private fun postSettings(json: String): Response {
