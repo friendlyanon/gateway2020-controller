@@ -3,8 +3,11 @@ package gateway.controller
 import gateway.controller.storage.Storage
 import kotlin.system.exitProcess
 
+// TODO deliver messages using a proper logging framework (or just force them
+//  to stdout for the operator?)
+
 private fun usage(): Nothing {
-    println()
+    // TODO print usage information
     exitProcess(0)
 }
 
@@ -16,6 +19,6 @@ fun main(args: Array<String>) {
             else -> arg.toIntOrNull(10)?.let { port = it }
         }
     }
-    println("Web API will be hosted on port $port")
+    // println("Web API will be hosted on port $port")
     Master(port, Storage("jdbc:h2:~/test", "controller", "secret")).run()
 }
