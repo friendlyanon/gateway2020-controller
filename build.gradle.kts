@@ -1,5 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import java.util.jar.Attributes.Name.*
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
@@ -14,6 +15,8 @@ plugins {
 
 group = "redacted"
 version = "0.1"
+val title = "Controller"
+val vendor = "[DATA EXPUNGED]"
 
 repositories {
     mavenCentral()
@@ -45,6 +48,16 @@ application {
     mainClassName = "gateway.controller.MainKt"
 }
 
+fun Jar.addVersionInfo() = manifest {
+    infix fun java.util.jar.Attributes.Name.to(value: Any) =
+        toString() to value
+    attributes(
+        SPECIFICATION_TITLE to title,
+        SPECIFICATION_VENDOR to vendor,
+        SPECIFICATION_VERSION to project.version
+    )
+}
+
 tasks {
     compileKotlin {
         kotlinOptions.jvmTarget = "1.8"
@@ -52,6 +65,10 @@ tasks {
 
     compileTestKotlin {
         kotlinOptions.jvmTarget = "1.8"
+    }
+
+    jar {
+        addVersionInfo()
     }
 
     val shadowJarTask = named<ShadowJar>("shadowJar")
@@ -64,5 +81,6 @@ tasks {
         mergeServiceFiles()
         dependsOn(relocate)
         minimize()
+        addVersionInfo()
     }
 }
