@@ -43,8 +43,7 @@ fun main(args: Array<String>) {
         "-?", "/?", "-h", "/h", "--help", "/help" -> usage()
         else -> arg?.toIntOrNull(10) ?: 8080
     }
-    println("Web API will be hosted on port $port")
+    println("--- Web API will be hosted on port $port")
 
-    Master(port, DbWrapper(getDatabase()))
-    // .run()
+    Master(port, DbWrapper(getDatabase())).run()
 }
