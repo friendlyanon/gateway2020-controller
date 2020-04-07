@@ -1,3 +1,5 @@
+@file:Suppress("ConstantConditionIf")
+
 import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import java.util.jar.Attributes.Name.*
@@ -17,6 +19,7 @@ group = "redacted"
 version = "0.1"
 val title = "Controller"
 val vendor = "[DATA EXPUNGED]"
+val shouldRelocate = false
 
 repositories {
     mavenCentral()
@@ -27,8 +30,8 @@ dependencies {
     // TODO add a logging library
     listOf(
         kotlin("stdlib-jdk8"),
+        "org.mapdb:mapdb:3.0.8",
         "org.zeromq:jeromq:0.5.1",
-        "com.h2database:h2:1.4.200",
         "org.nanohttpd:nanohttpd:2.3.1",
         "mysql:mysql-connector-java:8.0.19",
         "com.fasterxml.jackson.module:jackson-module-kotlin:2.10.3"
@@ -79,8 +82,9 @@ tasks {
     shadowJar {
         destinationDirectory.set(File(projectDir, "./build/"))
         mergeServiceFiles()
-        dependsOn(relocate)
-        minimize()
         addVersionInfo()
+        if (shouldRelocate) {
+            dependsOn(relocate)
+        }
     }
 }

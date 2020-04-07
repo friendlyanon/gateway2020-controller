@@ -1,6 +1,7 @@
 package gateway.controller
 
-import gateway.controller.events.handlers.MasterEventHandler
+import gateway.controller.database.DbWrapper
+import gateway.controller.events.MasterEventHandler
 import gateway.controller.storage.Storage
 import gateway.controller.utils.InitOnceProperty.Companion.initOnce
 import gateway.controller.utils.Queue
@@ -8,13 +9,12 @@ import gateway.controller.workers.Orchestrator
 import gateway.controller.workers.WebApi
 import gateway.controller.workers.WorkerContainer
 
-class Master(port: Int, val localStorage: Storage) : Runnable {
+class Master(port: Int, val localStorage: DbWrapper) : Runnable {
     val webApi: WorkerContainer
     val orchestrator: WorkerContainer
 
     var remoteStorage: Storage by initOnce()
 
-    // source of events to know when to restart which thread
     private val eventSource = Queue(true)
 
     init {

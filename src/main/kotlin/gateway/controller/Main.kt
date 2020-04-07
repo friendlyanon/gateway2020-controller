@@ -1,7 +1,9 @@
 package gateway.controller
 
-import gateway.controller.storage.Storage
+import gateway.controller.database.DbWrapper
+import java.io.File
 import kotlin.system.exitProcess
+import org.mapdb.DBMaker
 
 private fun usage(): Nothing {
     println(
@@ -27,6 +29,13 @@ private fun notice() {
     println("$title - v$version (c) 2020 $vendor, All Rights Reserved")
 }
 
+private fun getDatabase() = DBMaker
+    .fileDB(File("controller.db"))
+    .closeOnJvmShutdown()
+    .concurrencyDisable()
+    .transactionEnable()
+    .make()
+
 fun main(args: Array<String>) {
     notice()
 
@@ -36,7 +45,6 @@ fun main(args: Array<String>) {
     }
     println("Web API will be hosted on port $port")
 
-    val localStorage =
-        Storage("jdbc:h2:controller.h2.db", "controller", "secret")
-    Master(port, localStorage).run()
+    Master(port, DbWrapper(getDatabase()))
+    // .run()
 }

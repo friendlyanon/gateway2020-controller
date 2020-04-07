@@ -1,12 +1,7 @@
-package gateway.controller.events.handlers
+package gateway.controller.events
 
 import gateway.controller.Master
-import gateway.controller.events.Event
-import gateway.controller.events.EventException
 import gateway.controller.events.master.*
-import gateway.controller.events.master.ConnectionRequestEvent.Type.LOCAL
-import gateway.controller.events.master.ConnectionRequestEvent.Type.REMOTE
-import gateway.controller.events.orchestrator.ConnectionEvent
 import gateway.controller.events.webapi.StatusEvent
 
 class MasterEventHandler(private val master: Master) {
@@ -26,7 +21,7 @@ class MasterEventHandler(private val master: Master) {
 
     fun onEvent(event: Event) = when (event) {
         is ApiRunningEvent -> onApiRunning(event)
-        is ConnectionRequestEvent -> onConnectionRequest(event)
+        is DbRequestEvent -> onDbRequest(event)
         is InquireStatusEvent -> onInquireStatus(event)
         is RestartEvent -> onRestart(event)
         is SettingsChangedEvent -> onSettingsChanged(event)
@@ -41,12 +36,8 @@ class MasterEventHandler(private val master: Master) {
         TODO("Make sure we have the settings we need to run the orchestrator")
     }
 
-    private fun onConnectionRequest(event: ConnectionRequestEvent) {
-        val storage = when (event.type) {
-            LOCAL -> master.localStorage
-            REMOTE -> master.remoteStorage
-        }
-        event.port.offer(ConnectionEvent(storage.getConnection()))
+    private fun onDbRequest(event: DbRequestEvent) {
+        TODO()
     }
 
     private fun onSettingsChanged(event: SettingsChangedEvent) {
