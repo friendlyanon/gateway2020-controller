@@ -27,6 +27,7 @@ repositories {
 }
 
 dependencies {
+    ktlintRuleset(files("$projectDir/custom-rules/no-sun-imports.jar"))
     listOf(
         kotlin("stdlib-jdk8"),
         "org.mapdb:mapdb:3.0.8",
