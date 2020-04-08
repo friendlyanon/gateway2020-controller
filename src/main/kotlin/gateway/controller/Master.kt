@@ -9,9 +9,9 @@ import gateway.controller.utils.simpleName
 import gateway.controller.workers.Orchestrator
 import gateway.controller.workers.WebApi
 import gateway.controller.workers.WorkerContainer
-import org.slf4j.LoggerFactory
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
+import org.slf4j.LoggerFactory
 
 class Master(port: Int, val localStorage: DbWrapper) : Runnable {
     val webApi: WorkerContainer
