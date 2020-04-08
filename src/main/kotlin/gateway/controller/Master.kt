@@ -1,8 +1,8 @@
 package gateway.controller
 
 import gateway.controller.database.DbWrapper
+import gateway.controller.database.SqlDatabase
 import gateway.controller.events.MasterEventHandler
-import gateway.controller.storage.Storage
 import gateway.controller.utils.InitOnceProperty.Companion.initOnce
 import gateway.controller.utils.Queue
 import gateway.controller.utils.getLogger
@@ -16,7 +16,7 @@ class Master(port: Int, val localStorage: DbWrapper) : Runnable {
     val webApi: WorkerContainer
     val orchestrator: WorkerContainer
 
-    var remoteStorage: Storage by initOnce()
+    var remoteStorage: SqlDatabase by initOnce()
 
     private val eventSource = Queue(true)
 

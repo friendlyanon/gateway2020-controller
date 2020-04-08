@@ -3,7 +3,7 @@ package gateway.controller.database
 import org.mapdb.DB
 import org.mapdb.Serializer
 
-class DbWrapper(private val db: DB) {
+class DbWrapper(private val db: DB) : Storage {
     enum class Table { DETAILS, STORE }
 
     fun <T> readOnlyUse(tbl: Table, block: (Map<String, String>) -> T) =
