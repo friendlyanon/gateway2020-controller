@@ -1,6 +1,7 @@
 package gateway.controller.workers
 
 import fi.iki.elonen.NanoHTTPD
+import gateway.controller.Master
 import gateway.controller.events.Event
 import gateway.controller.events.master.ApiReadyEvent
 import gateway.controller.events.master.RestartEvent
@@ -14,16 +15,17 @@ class WebApi(queue: Queue, port: Int) : AbstractWorker(queue) {
         setAsyncRunner(BoundRunner(Executors.newSingleThreadExecutor()))
     }
 
-    fun offer(event: Event) {
-        queue.offer(event)
+    fun put(event: Event) {
+        require(Master.thread != Thread.currentThread())
+        queue.put(event)
     }
 
     override fun run() {
         try {
             server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false)
-            offer(ApiReadyEvent())
+            put(ApiReadyEvent())
         } catch (e: Throwable) {
-            offer(RestartEvent())
+            put(RestartEvent())
         }
     }
 }

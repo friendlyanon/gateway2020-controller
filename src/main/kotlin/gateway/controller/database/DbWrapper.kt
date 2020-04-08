@@ -11,8 +11,11 @@ class DbWrapper(private val db: DB) {
     }
 
     fun readWriteUse(tbl: Table, block: (MutableMap<String, String>) -> Unit) {
-        block(getMap(tbl))
-        db.commit()
+        try {
+            block(getMap(tbl))
+        } finally {
+            db.commit()
+        }
     }
 
     private fun getMap(tbl: Table) = db

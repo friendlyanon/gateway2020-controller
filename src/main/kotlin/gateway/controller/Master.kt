@@ -8,6 +8,7 @@ import gateway.controller.utils.Queue
 import gateway.controller.workers.Orchestrator
 import gateway.controller.workers.WebApi
 import gateway.controller.workers.WorkerContainer
+import kotlin.system.exitProcess
 
 class Master(port: Int, val localStorage: DbWrapper) : Runnable {
     val webApi: WorkerContainer
@@ -31,8 +32,24 @@ class Master(port: Int, val localStorage: DbWrapper) : Runnable {
         webApi.restart()
 
         val handler = MasterEventHandler(this)
-        while (true) {
-            handler.onEvent(eventSource.take())
+        try {
+            while (true) {
+                handler.onEvent(eventSource.take())
+            }
+        } catch (e: Throwable) {
+            System.err.println("Fatal exception in the main thread, shutting down")
+            e.printStackTrace(System.err)
+            exitProcess(1)
+        }
+    }
+
+    companion object {
+        private val mainThread = Thread.currentThread()
+        val thread = object : Any() {
+            override fun equals(other: Any?) = when (other) {
+                is Thread -> other == mainThread
+                else -> throw IllegalArgumentException("Expected a thread")
+            }
         }
     }
 }

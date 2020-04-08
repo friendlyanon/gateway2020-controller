@@ -3,14 +3,16 @@ package gateway.controller.server
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import fi.iki.elonen.NanoHTTPD
 import gateway.controller.events.EventException
+import gateway.controller.events.master.CommandEvent
 import gateway.controller.events.master.InquireStatusEvent
 import gateway.controller.events.webapi.StatusEvent
 import gateway.controller.utils.Queue
 import gateway.controller.utils.cast
 import gateway.controller.workers.WebApi
+import gateway.controller.server.models.Command as CommandModel
 
 class Server(private val parent: WebApi, port: Int) : NanoHTTPD(port) {
-    val mapper = jacksonObjectMapper()
+    private val mapper = jacksonObjectMapper()
 
     override fun serve(session: IHTTPSession): Response {
         try {
@@ -31,15 +33,23 @@ class Server(private val parent: WebApi, port: Int) : NanoHTTPD(port) {
             }
             Method.POST -> when (session.uri) {
                 "/api/settings" -> return postSettings(parseBody(session))
+                "/api/command" -> return postCommand(parseBody(session))
             }
         }
 
         return null
     }
 
+    private fun postCommand(json: String): Response {
+        val (command) = json.parseAs<CommandModel>()
+        val type = Command.valueOf(command)
+        parent.put(CommandEvent(type))
+        return jsonResponse()
+    }
+
     private fun getStatus(): Response {
         val queue = Queue()
-        parent.offer(InquireStatusEvent(queue))
+        parent.put(InquireStatusEvent(queue))
         val event = queue.take()
         return when (val status = event.cast<StatusEvent>()) {
             null -> throw EventException("Not a status event", event)
@@ -60,4 +70,7 @@ class Server(private val parent: WebApi, port: Int) : NanoHTTPD(port) {
         val stream = session.inputStream
         TODO()
     }
+
+    private inline fun <reified T> String.parseAs() =
+        mapper.readValue(this, T::class.java)
 }

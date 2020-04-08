@@ -3,6 +3,7 @@ package gateway.controller.events
 import gateway.controller.Master
 import gateway.controller.events.master.*
 import gateway.controller.events.webapi.StatusEvent
+import gateway.controller.server.Command
 
 class MasterEventHandler(private val master: Master) {
     // TODO add more statuses
@@ -20,7 +21,8 @@ class MasterEventHandler(private val master: Master) {
     )
 
     fun onEvent(event: Event) = when (event) {
-        is ApiRunningEvent -> onApiRunning(event)
+        is ApiReadyEvent -> onApiReady(event)
+        is CommandEvent -> onCommand(event)
         is DbRequestEvent -> onDbRequest(event)
         is InquireStatusEvent -> onInquireStatus(event)
         is RestartEvent -> onRestart(event)
@@ -28,11 +30,16 @@ class MasterEventHandler(private val master: Master) {
         else -> throw EventException("Not a master event", event)
     }
 
-    private fun onInquireStatus(event: InquireStatusEvent) {
-        event.port.offer(StatusEvent(status))
+    private fun onCommand(event: CommandEvent) = when (event.type) {
+        Command.restart -> master.orchestrator.restart()
+        Command.shutdown -> master.orchestrator.interrupt()
     }
 
-    private fun onApiRunning(event: ApiRunningEvent) {
+    private fun onInquireStatus(event: InquireStatusEvent) {
+        event.port.put(StatusEvent(status))
+    }
+
+    private fun onApiReady(event: ApiReadyEvent) {
         TODO("Make sure we have the settings we need to run the orchestrator")
     }
 
