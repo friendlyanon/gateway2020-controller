@@ -39,8 +39,6 @@ class Master(port: Int, val localStorage: DbWrapper) : Runnable {
             LOG.info("Exiting")
         })
 
-        orchestrator.initThread()
-
         // we only start the Web API's thread for now, then wait on it to start
         // running the web server
         webApi.restart()
