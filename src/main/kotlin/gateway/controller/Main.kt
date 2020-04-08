@@ -1,9 +1,9 @@
 package gateway.controller
 
 import gateway.controller.database.DbWrapper
+import org.mapdb.DBMaker
 import java.io.File
 import kotlin.system.exitProcess
-import org.mapdb.DBMaker
 
 private fun usage(): Nothing {
     println(

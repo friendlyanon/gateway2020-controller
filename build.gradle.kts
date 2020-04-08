@@ -2,8 +2,8 @@
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import java.util.jar.Attributes.Name.*
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
+import java.util.jar.Attributes.Name.*
 
 plugins {
     val ktlintVersion = "9.2.1"

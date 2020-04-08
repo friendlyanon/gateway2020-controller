@@ -6,10 +6,10 @@ import gateway.controller.events.EventException
 import gateway.controller.events.master.CommandEvent
 import gateway.controller.events.master.InquireStatusEvent
 import gateway.controller.events.webapi.StatusEvent
-import gateway.controller.server.models.Command as CommandModel
 import gateway.controller.utils.Queue
 import gateway.controller.utils.cast
 import gateway.controller.workers.WebApi
+import gateway.controller.server.models.Command as CommandModel
 
 class Server(private val parent: WebApi, port: Int) : NanoHTTPD(port) {
     private val mapper = jacksonObjectMapper()
