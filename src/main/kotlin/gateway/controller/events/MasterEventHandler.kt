@@ -62,7 +62,7 @@ class MasterEventHandler(private val master: Master) {
     private fun onSettingsChanged(event: SettingsChangedEvent) {
         master.localStorage.readWriteUse(DETAILS) {
             for ((key, value) in event.settings) {
-                it[key] = value
+                put(key, value)
             }
         }
         runStateMachine()
@@ -100,7 +100,7 @@ class MasterEventHandler(private val master: Master) {
         private val stateMachine = sequence {
             fun detailsGet(handler: MasterEventHandler, key: String) =
                 handler.master.localStorage.readOnlyUse(DETAILS) {
-                    it.getOrDefault(key, null)
+                    getOrDefault(key, null)
                 }
 
             while (true) {
