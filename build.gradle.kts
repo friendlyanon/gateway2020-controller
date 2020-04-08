@@ -2,8 +2,8 @@
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import java.util.jar.Attributes.Name.*
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
+import java.util.jar.Attributes.Name.*
 
 plugins {
     val ktlintVersion = "9.2.1"
@@ -27,11 +27,12 @@ repositories {
 }
 
 dependencies {
-    // TODO add a logging library
     listOf(
         kotlin("stdlib-jdk8"),
         "org.mapdb:mapdb:3.0.8",
         "org.zeromq:jeromq:0.5.1",
+        "org.slf4j:slf4j-api:1.7.30",
+        "org.slf4j:slf4j-simple:1.7.30",
         "org.nanohttpd:nanohttpd:2.3.1",
         "mysql:mysql-connector-java:8.0.19",
         "com.fasterxml.jackson.module:jackson-module-kotlin:2.10.3"

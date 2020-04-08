@@ -5,9 +5,12 @@ import gateway.controller.events.MasterEventHandler
 import gateway.controller.storage.Storage
 import gateway.controller.utils.InitOnceProperty.Companion.initOnce
 import gateway.controller.utils.Queue
+import gateway.controller.utils.simpleName
 import gateway.controller.workers.Orchestrator
 import gateway.controller.workers.WebApi
 import gateway.controller.workers.WorkerContainer
+import org.slf4j.LoggerFactory
+import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
 class Master(port: Int, val localStorage: DbWrapper) : Runnable {
@@ -25,6 +28,18 @@ class Master(port: Int, val localStorage: DbWrapper) : Runnable {
     }
 
     override fun run(): Nothing {
+        Runtime.getRuntime().addShutdownHook(thread(start = false) {
+            LOG.info("Starting shutdown sequence")
+            for (container in listOf(orchestrator, webApi)) {
+                try {
+                    container.interrupt()
+                    container.join()
+                } catch (e: InterruptedException) {
+                }
+            }
+            LOG.info("Exiting")
+        })
+
         orchestrator.initThread()
 
         // we only start the Web API's thread for now, then wait on it to start
@@ -34,16 +49,19 @@ class Master(port: Int, val localStorage: DbWrapper) : Runnable {
         val handler = MasterEventHandler(this)
         try {
             while (true) {
-                handler.onEvent(eventSource.take())
+                val event = eventSource.take()
+                LOG.info("Event received {}", event)
+                handler.onEvent(event)
             }
         } catch (e: Throwable) {
-            System.err.println("Fatal exception in the main thread, shutting down")
-            e.printStackTrace(System.err)
+            LOG.error("Fatal exception in the main thread, shutting down", e)
             exitProcess(1)
         }
     }
 
     companion object {
+        private val LOG = LoggerFactory.getLogger(simpleName<Master>())
+
         private val mainThread = Thread.currentThread()
         val thread = object : Any() {
             override fun equals(other: Any?) = when (other) {

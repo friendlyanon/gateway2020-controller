@@ -1,19 +1,24 @@
 package gateway.controller.events
 
 import gateway.controller.Master
+import gateway.controller.database.DbWrapper.Table.DETAILS
 import gateway.controller.events.master.*
 import gateway.controller.events.webapi.StatusEvent
 import gateway.controller.server.Command
+import gateway.controller.storage.Storage
+import gateway.controller.utils.simpleName
+import org.slf4j.LoggerFactory
 
 class MasterEventHandler(private val master: Master) {
     // TODO add more statuses
     enum class Status {
-        INITIAL;
+        INITIAL,
+        WAITING_FOR_DSN;
 
         override fun toString() = name.toLowerCase()
     }
 
-    private val status = Status.INITIAL
+    private var status = Status.INITIAL
 
     private val containers = mutableMapOf(
         master.webApi.name to master.webApi,
@@ -40,7 +45,18 @@ class MasterEventHandler(private val master: Master) {
     }
 
     private fun onApiReady(event: ApiReadyEvent) {
-        TODO("Make sure we have the settings we need to run the orchestrator")
+        LOG.info("Web API is ready")
+        val dbDsn = master.localStorage.readOnlyUse(DETAILS) {
+            return@readOnlyUse it.getOrDefault("dbDsn", null)
+        }
+        if (dbDsn == null) {
+            LOG.info("Controller is not yet registered from a web interface")
+            status = Status.WAITING_FOR_DSN
+        } else {
+            LOG.info("DSN found, starting orchestrator")
+            master.remoteStorage = Storage(dbDsn)
+            master.orchestrator.start()
+        }
     }
 
     private fun onDbRequest(event: DbRequestEvent) {
@@ -54,13 +70,18 @@ class MasterEventHandler(private val master: Master) {
     private fun onRestart(event: RestartEvent) {
         val name = event.name
         val container = containers[name]!!
-        println("Thread $name requested a restart")
+        LOG.info("Thread $name requested a restart")
 
         // if the thread requested a restart, then it should have already
         // prepared to shut down, calling to interrupt only to make sure
         container.interrupt()
 
         container.restart()
-        println("Thread $name was restarted")
+        LOG.info("Thread $name was restarted")
+    }
+
+    companion object {
+        private val LOG =
+            LoggerFactory.getLogger(simpleName<MasterEventHandler>())
     }
 }

@@ -22,6 +22,10 @@ class WorkerContainer(
         checkDates()
     }
 
+    fun join() {
+        thread.join()
+    }
+
     fun start() {
         thread.start()
     }
