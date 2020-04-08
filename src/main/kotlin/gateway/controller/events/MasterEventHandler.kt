@@ -41,8 +41,8 @@ class MasterEventHandler(private val master: Master) {
     }
 
     private fun onCommand(event: CommandEvent) = when (event.type) {
-        Command.restart -> master.orchestrator.restart()
-        Command.shutdown -> master.orchestrator.interrupt()
+        Command.RESTART -> master.orchestrator.restart()
+        Command.SHUTDOWN -> master.orchestrator.interrupt()
     }
 
     private fun onInquireStatus(event: InquireStatusEvent) {

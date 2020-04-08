@@ -5,6 +5,7 @@ import fi.iki.elonen.NanoHTTPD.AsyncRunner
 import java.util.*
 import java.util.concurrent.ExecutorService
 
+// Copy-paste'd from official NanoHTTPD documentation
 class BoundRunner(private val executorService: ExecutorService) : AsyncRunner {
     private val running =
         Collections.synchronizedList(ArrayList<NanoHTTPD.ClientHandler>())

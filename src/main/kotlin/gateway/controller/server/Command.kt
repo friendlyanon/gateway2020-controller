@@ -1,3 +1,3 @@
 package gateway.controller.server
 
-enum class Command { restart, shutdown }
+enum class Command { RESTART, SHUTDOWN }
