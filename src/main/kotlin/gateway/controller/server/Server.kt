@@ -37,14 +37,17 @@ class Server(private val parent: WebApi, port: Int) : NanoHTTPD(port) {
         files: Map<String, String>
     ): Response? {
         LOG.info("Incoming request: {} {}", method, uri)
-        val body = files.getValue("postData")
         when (method) {
             Method.GET -> when (uri) {
                 "/api/status" -> return getStatus()
             }
-            Method.POST -> when (uri) {
-                "/api/settings" -> return postSettings(body)
-                "/api/command" -> return postCommand(body)
+            Method.POST -> {
+                // "postData" is where the POST body is stored by NanoHTTPD
+                val body = files.getValue("postData")
+                when (uri) {
+                    "/api/settings" -> return postSettings(body)
+                    "/api/command" -> return postCommand(body)
+                }
             }
         }
 
