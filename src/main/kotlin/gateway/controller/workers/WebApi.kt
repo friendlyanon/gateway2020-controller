@@ -25,7 +25,7 @@ class WebApi(queue: Queue, port: Int) : AbstractWorker(queue) {
             server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false)
             put(ApiReadyEvent())
         } catch (e: Throwable) {
-            put(RestartEvent())
+            put(RestartEvent(exception = e))
         }
     }
 }

@@ -6,8 +6,7 @@ import gateway.controller.events.master.*
 import gateway.controller.events.webapi.StatusEvent
 import gateway.controller.server.Command
 import gateway.controller.storage.Storage
-import gateway.controller.utils.simpleName
-import org.slf4j.LoggerFactory
+import gateway.controller.utils.getLogger
 
 class MasterEventHandler(private val master: Master) {
     // TODO add more statuses
@@ -70,7 +69,14 @@ class MasterEventHandler(private val master: Master) {
     private fun onRestart(event: RestartEvent) {
         val name = event.name
         val container = containers[name]!!
-        LOG.info("Thread $name requested a restart")
+
+        val exception = event.exception
+        if (exception != null) {
+            val msg = "Restarting thread $name, because it threw an exception"
+            LOG.error(msg, exception)
+        } else {
+            LOG.info("Thread $name requested a restart")
+        }
 
         // if the thread requested a restart, then it should have already
         // prepared to shut down, calling to interrupt only to make sure
@@ -81,7 +87,6 @@ class MasterEventHandler(private val master: Master) {
     }
 
     companion object {
-        private val LOG =
-            LoggerFactory.getLogger(simpleName<MasterEventHandler>())
+        private val LOG = getLogger<MasterEventHandler>()
     }
 }

@@ -8,6 +8,7 @@ import gateway.controller.events.master.InquireStatusEvent
 import gateway.controller.events.webapi.StatusEvent
 import gateway.controller.utils.Queue
 import gateway.controller.utils.cast
+import gateway.controller.utils.getLogger
 import gateway.controller.workers.WebApi
 import gateway.controller.server.models.Command as CommandModel
 
@@ -27,6 +28,7 @@ class Server(private val parent: WebApi, port: Int) : NanoHTTPD(port) {
 
     @Suppress("NON_EXHAUSTIVE_WHEN")
     private fun dispatch(session: IHTTPSession): Response? {
+        LOG.info("Incoming request: {} {}", session.method, session.uri)
         when (session.method) {
             Method.GET -> when (session.uri) {
                 "/api/status" -> return getStatus()
@@ -73,4 +75,8 @@ class Server(private val parent: WebApi, port: Int) : NanoHTTPD(port) {
 
     private inline fun <reified T> String.parseAs() =
         mapper.readValue(this, T::class.java)
+
+    companion object {
+        private val LOG = getLogger<Server>()
+    }
 }

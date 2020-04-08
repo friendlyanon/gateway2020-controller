@@ -5,11 +5,10 @@ import gateway.controller.events.MasterEventHandler
 import gateway.controller.storage.Storage
 import gateway.controller.utils.InitOnceProperty.Companion.initOnce
 import gateway.controller.utils.Queue
-import gateway.controller.utils.simpleName
+import gateway.controller.utils.getLogger
 import gateway.controller.workers.Orchestrator
 import gateway.controller.workers.WebApi
 import gateway.controller.workers.WorkerContainer
-import org.slf4j.LoggerFactory
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
@@ -60,7 +59,7 @@ class Master(port: Int, val localStorage: DbWrapper) : Runnable {
     }
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(simpleName<Master>())
+        private val LOG = getLogger<Master>()
 
         private val mainThread = Thread.currentThread()
         val thread = object : Any() {
