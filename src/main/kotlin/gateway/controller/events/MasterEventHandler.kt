@@ -8,6 +8,7 @@ import gateway.controller.events.master.DbRequestEvent.Type.LOCAL
 import gateway.controller.events.master.DbRequestEvent.Type.REMOTE
 import gateway.controller.events.webapi.StatusEvent
 import gateway.controller.server.Command
+import gateway.controller.utils.StateBlock
 import gateway.controller.utils.getLogger
 
 class MasterEventHandler(private val master: Master) {
@@ -97,48 +98,49 @@ class MasterEventHandler(private val master: Master) {
         private val LOG = getLogger<MasterEventHandler>()
 
         private var handler: MasterEventHandler? = null
-        private val stateMachine = sequence {
-            fun detailsGet(handler: MasterEventHandler, key: String) =
-                handler.master.localStorage.readOnlyUse(DETAILS) {
+        private val stateMachine: Iterator<Boolean> = { block: StateBlock ->
+            sequence {
+                while (true) {
+                    val handler = handler!!
+                    MasterEventHandler.handler = null
+                    yield(handler.block())
+                }
+            }.iterator()
+        } block@{
+            fun detailsGet(key: String) =
+                master.localStorage.readOnlyUse(DETAILS) {
                     getOrDefault(key, null)
                 }
 
-            while (true) {
-                val handler = handler!!
-                MasterEventHandler.handler = null
-
-                if (handler.status == Status.INITIAL) {
-                    handler.status = Status.WAITING_FOR_DB_URL
-                }
-
-                if (handler.status == Status.WAITING_FOR_DB_URL) {
-                    val dbUrl = detailsGet(handler, "dbUrl")
-                    if (dbUrl == null) {
-                        LOG.info("Controller is not yet registered from a web interface")
-                        yield(false)
-                        continue
-                    }
-
-                    LOG.info("Database URL found")
-                    handler.master.remoteStorage = SqlDatabase("jdbc:$dbUrl")
-                    handler.status = Status.WAITING_FOR_ORCHESTRATOR_SETTINGS
-                }
-
-                if (handler.status == Status.WAITING_FOR_ORCHESTRATOR_SETTINGS) {
-                    val modulesOrder = detailsGet(handler, "modulesOrder")
-                    if (modulesOrder == null) {
-                        LOG.info("The order of modules was not yet set up")
-                        yield(false)
-                        continue
-                    }
-
-                    LOG.info("Module order found, starting orchestrator")
-                    handler.master.orchestrator.start()
-                    handler.status = Status.STARTING_ORCHESTRATOR
-                }
-
-                yield(true)
+            if (status == Status.INITIAL) {
+                status = Status.WAITING_FOR_DB_URL
             }
-        }.iterator()
+
+            if (status == Status.WAITING_FOR_DB_URL) {
+                val dbUrl = detailsGet("dbUrl")
+                if (dbUrl == null) {
+                    LOG.info("Controller is not yet registered from a web interface")
+                    return@block false
+                }
+
+                LOG.info("Database URL found")
+                master.remoteStorage = SqlDatabase("jdbc:$dbUrl")
+                status = Status.WAITING_FOR_ORCHESTRATOR_SETTINGS
+            }
+
+            if (status == Status.WAITING_FOR_ORCHESTRATOR_SETTINGS) {
+                val modulesOrder = detailsGet("modulesOrder")
+                if (modulesOrder == null) {
+                    LOG.info("The order of modules was not yet set up")
+                    return@block false
+                }
+
+                LOG.info("Module order found, starting orchestrator")
+                master.orchestrator.start()
+                status = Status.STARTING_ORCHESTRATOR
+            }
+
+            return@block true
+        }
     }
 }
