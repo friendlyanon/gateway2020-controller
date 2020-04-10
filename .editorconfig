@@ -19,5 +19,4 @@ end_of_line = crlf
 
 # noinspection EditorConfigKeyCorrectness
 [*.kt]
-insert_final_newline = true
 disabled_rules = no-wildcard-imports, import-ordering
