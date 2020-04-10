@@ -12,3 +12,6 @@ fun simpleName(clazz: Class<*>) = getClassName(clazz.name)
 
 inline fun <reified T> getLogger(): Logger =
     LoggerFactory.getLogger(simpleName<T>())
+
+fun <T : Any> generateIterator(block: () -> T?) =
+    generateSequence(block).iterator()

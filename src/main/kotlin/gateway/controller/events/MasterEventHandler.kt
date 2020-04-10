@@ -9,6 +9,7 @@ import gateway.controller.events.master.DbRequestEvent.Type.REMOTE
 import gateway.controller.events.webapi.StatusEvent
 import gateway.controller.server.Command
 import gateway.controller.utils.StateBlock
+import gateway.controller.utils.generateIterator
 import gateway.controller.utils.getLogger
 
 class MasterEventHandler(private val master: Master) {
@@ -99,13 +100,11 @@ class MasterEventHandler(private val master: Master) {
 
         private var handler: MasterEventHandler? = null
         private val stateMachine: Iterator<Boolean> = { block: StateBlock ->
-            sequence {
-                while (true) {
-                    val handler = handler!!
-                    MasterEventHandler.handler = null
-                    yield(handler.block())
-                }
-            }.iterator()
+            generateIterator {
+                val handler = handler!!
+                MasterEventHandler.handler = null
+                handler.block()
+            }
         } block@{
             fun detailsGet(key: String) =
                 master.localStorage.readOnlyUse(DETAILS) {
