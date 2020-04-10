@@ -2,24 +2,23 @@ package gateway.controller.workers
 
 import gateway.controller.utils.RingBuffer
 import gateway.controller.utils.WorkerFactory
-import java.util.*
 
 class WorkerContainer(
     val name: String,
     private val factory: WorkerFactory
 ) {
-    private lateinit var thread: Thread
+    private var thread = Thread(factory(), name)
     private val dateBuffer = RingBuffer<Long>(dateSampleSize)
-
-    fun initThread() {
-        thread = Thread(factory(), name)
-    }
 
     fun interrupt() {
         thread.interrupt()
 
-        dateBuffer.add(Date().time)
+        dateBuffer.add(System.currentTimeMillis())
         checkDates()
+    }
+
+    fun join() {
+        thread.join()
     }
 
     fun start() {
@@ -27,7 +26,7 @@ class WorkerContainer(
     }
 
     fun restart() {
-        initThread()
+        thread = Thread(factory(), name)
         start()
     }
 

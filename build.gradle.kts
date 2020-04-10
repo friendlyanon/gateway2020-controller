@@ -1,6 +1,9 @@
+@file:Suppress("ConstantConditionIf")
+
 import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
+import java.util.jar.Attributes.Name.*
 
 plugins {
     val ktlintVersion = "9.2.1"
@@ -14,6 +17,9 @@ plugins {
 
 group = "redacted"
 version = "0.1"
+val title = "Controller"
+val vendor = "[DATA EXPUNGED]"
+val shouldRelocate = false
 
 repositories {
     mavenCentral()
@@ -21,11 +27,13 @@ repositories {
 }
 
 dependencies {
-    // TODO add a logging library
+    ktlintRuleset(files("$projectDir/custom-rules/no-sun-imports.jar"))
     listOf(
         kotlin("stdlib-jdk8"),
+        "org.mapdb:mapdb:3.0.8",
         "org.zeromq:jeromq:0.5.1",
-        "com.h2database:h2:1.4.200",
+        "org.slf4j:slf4j-api:1.7.30",
+        "org.slf4j:slf4j-simple:1.7.30",
         "org.nanohttpd:nanohttpd:2.3.1",
         "mysql:mysql-connector-java:8.0.19",
         "com.fasterxml.jackson.module:jackson-module-kotlin:2.10.3"
@@ -45,6 +53,16 @@ application {
     mainClassName = "gateway.controller.MainKt"
 }
 
+fun Jar.addVersionInfo() = manifest {
+    infix fun java.util.jar.Attributes.Name.to(value: Any) =
+        toString() to value
+    attributes(
+        SPECIFICATION_TITLE to title,
+        SPECIFICATION_VENDOR to vendor,
+        SPECIFICATION_VERSION to project.version
+    )
+}
+
 tasks {
     compileKotlin {
         kotlinOptions.jvmTarget = "1.8"
@@ -52,6 +70,10 @@ tasks {
 
     compileTestKotlin {
         kotlinOptions.jvmTarget = "1.8"
+    }
+
+    jar {
+        addVersionInfo()
     }
 
     val shadowJarTask = named<ShadowJar>("shadowJar")
@@ -62,7 +84,9 @@ tasks {
     shadowJar {
         destinationDirectory.set(File(projectDir, "./build/"))
         mergeServiceFiles()
-        dependsOn(relocate)
-        minimize()
+        addVersionInfo()
+        if (shouldRelocate) {
+            dependsOn(relocate)
+        }
     }
 }
