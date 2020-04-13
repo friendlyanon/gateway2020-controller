@@ -4,8 +4,7 @@ import gateway.controller.Master
 import gateway.controller.database.DbWrapper.Table.DETAILS
 import gateway.controller.database.SqlDatabase
 import gateway.controller.events.master.*
-import gateway.controller.events.master.DbRequestEvent.Type.LOCAL
-import gateway.controller.events.master.DbRequestEvent.Type.REMOTE
+import gateway.controller.events.master.DbRequestEvent.Type
 import gateway.controller.events.webapi.StatusEvent
 import gateway.controller.server.Command
 import gateway.controller.utils.StateBlock
@@ -57,8 +56,8 @@ class MasterEventHandler(private val master: Master) {
     }
 
     private fun onDbRequest(event: DbRequestEvent) = when (event.type) {
-        LOCAL -> event.port.put(master.localStorage)
-        REMOTE -> event.port.put(master.remoteStorage)
+        Type.LOCAL -> event.port.put(master.localStorage)
+        Type.REMOTE -> event.port.put(master.remoteStorage)
     }
 
     private fun onSettingsChanged(event: SettingsChangedEvent) {

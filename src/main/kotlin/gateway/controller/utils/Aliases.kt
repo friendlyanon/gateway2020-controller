@@ -9,3 +9,4 @@ typealias Queue = SynchronousQueue<Event>
 typealias WorkerFactory = () -> AbstractWorker
 typealias SettingsList = List<Pair<String, String>>
 typealias StateBlock = MasterEventHandler.() -> Boolean
+typealias JSONObject = HashMap<String, Any?>
