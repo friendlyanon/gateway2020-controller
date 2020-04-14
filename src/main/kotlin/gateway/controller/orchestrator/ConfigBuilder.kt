@@ -19,11 +19,9 @@ class ConfigBuilder(gatewayId: Int, conn: Connection) {
     ).iterator()
 
     init {
-        val stmt = conn.prepareStatement("CALL `fetch_gateway`(?)")
-        stmt.setInt(1, gatewayId)
-
+        val stmt = conn.createStatement()
         var first = true
-        var isResultSet = stmt.execute()
+        var isResultSet = stmt.execute("CALL `fetch_gateway`('$gatewayId')")
         while (true) {
             if (isResultSet) {
                 if (first) {
