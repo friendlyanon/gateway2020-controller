@@ -47,7 +47,7 @@ class ConfigBuilder(gatewayId: Int, conn: Connection) {
 
     private fun Sequence<JSONObject>.toObject() = JSONObject().also {
         for (obj in this) {
-            it[(obj["id"] as Int).toString()] = obj
+            it[obj["id"].toString()] = obj
         }
     }
 

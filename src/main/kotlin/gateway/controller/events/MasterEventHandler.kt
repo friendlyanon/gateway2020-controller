@@ -16,6 +16,7 @@ class MasterEventHandler(private val master: Master) {
     enum class Status {
         INITIAL,
         WAITING_FOR_DB_URL,
+        WAITING_FOR_GATEWAY_ID,
         WAITING_FOR_ORCHESTRATOR_SETTINGS,
         STARTING_ORCHESTRATOR,
         WAITING_FOR_DATA,
@@ -123,6 +124,17 @@ class MasterEventHandler(private val master: Master) {
 
                 LOG.info("Database URL found")
                 master.remoteStorage = SqlDatabase("jdbc:$dbUrl")
+                status = Status.WAITING_FOR_GATEWAY_ID
+            }
+
+            if (status == Status.WAITING_FOR_GATEWAY_ID) {
+                val gatewayId = detailsGet("gatewayId")
+                if (gatewayId == null) {
+                    LOG.info("Web interface has not yet sent the gateway ID")
+                    return@block false
+                }
+
+                LOG.info("Gateway ID found: {}", gatewayId)
                 status = Status.WAITING_FOR_ORCHESTRATOR_SETTINGS
             }
 
