@@ -2,34 +2,73 @@ package gateway.controller.orchestrator
 
 import gateway.controller.utils.JSONObject
 import java.sql.Connection
-import java.sql.PreparedStatement
 import java.sql.Statement
 
+// TODO look into implementing this in a database procedure
 class ConfigBuilder(gatewayId: Int, conn: Connection) {
     val result = JSONObject()
 
     init {
-        result["gateway"] = conn
-            .run("SELECT * FROM ? WHERE id = ?", "gateways", gatewayId)
-            .get()!!
+        result["gateway"] = conn.where("gateways", "id", gatewayId).get()!!
 
-        val stations = conn
-            .run("SELECT * FROM ? WHERE gateway_id = ?", "stations", gatewayId)
-            .toList()
-        val stationIds = mutableListOf<Int>()
-        val inputParameterIds = mutableListOf<Int>()
+        val stations = conn.where("stations", "gateway_id", gatewayId).toList()
+        val stationIds = ids()
+        val inputParameterIds = ids()
         result["stations"] = stations.toObject(
             { stationIds.add(it) },
             { inputParameterIds.add(get("input_parameter_id") as Int) }
         )
 
         result["input_parameters"] = conn
-            .run("SELECT * FROM ? WHERE id IN (?)", "input_parameters", inputParameterIds)
+            .where("input_parameters", "id", inputParameterIds)
             .toList()
             .toObject()
 
-        TODO("Finish fetching everything")
+        val sensors = conn.where("sensors", "station_id", stationIds).toList()
+        val descriptorIds = ids()
+        val sensorTypeIds = ids()
+        val validationIds = ids()
+        result["sensors"] = sensors.toObject(
+            { descriptorIds.add(get("descriptor_id") as Int) },
+            { sensorTypeIds.add(get("sensor_type_ids") as Int) },
+            { get("validation_id")?.let { validationIds.add(it as Int) } }
+        )
+
+        result["validations"] = when {
+            validationIds.isEmpty() -> JSONObject()
+            else -> conn
+                .where("validations", "id", validationIds)
+                .toList()
+                .toObject()
+        }
+
+        val descriptors = conn
+            .where("descriptors", "id", descriptorIds)
+            .toList()
+        val groupIds = ids()
+        val unitSet = mutableSetOf<Int>()
+        result["descriptors"] = descriptors.toObject(
+            { get("group_id")?.let { groupIds.add(it as Int) } },
+            { unitSet.add(get("unit_id") as Int) }
+        )
+
+        result["groups"] = when {
+            groupIds.isEmpty() -> JSONObject()
+            else -> conn.where("groups", "id", groupIds).toList().toObject()
+        }
+
+        result["sensor_types"] = conn
+            .where("sensor_types", "id", sensorTypeIds)
+            .toList()
+            .toObject({ unitSet.add(get("unit_id") as Int) })
+
+        result["units"] = conn
+            .where("units", "id", unitSet.toList())
+            .toList()
+            .toObject()
     }
+
+    private fun ids() = mutableListOf<Int>()
 
     private fun List<JSONObject>.toObject(
         vararg transformers: JSONObject.(Int) -> Unit
@@ -43,52 +82,28 @@ class ConfigBuilder(gatewayId: Int, conn: Connection) {
         }
     }
 
-    private fun withCollections(
-        sql: String,
-        bindings: Array<out Any?>,
-        prepare: (String) -> PreparedStatement
-    ): Statement {
-        var i = -1
-        val replacedSql = sql.replace(Regex("\\?")) {
-            when (val value = bindings[++i]) {
-                is Collection<*> -> when (value.size) {
-                    1 -> "?"
-                    else -> StringBuffer((value.size - 1) * 3 + 1).apply {
-                        append('?')
-                        for (j in 2..value.size) {
-                            append(", ?")
-                        }
-                    }.toString()
-                }
-                else -> "?"
+    private fun Connection.where(tbl: String, column: String, id: Int) =
+        run("SELECT * FROM $tbl WHERE $column = ?", listOf(id))
+
+    private fun Connection.where(tbl: String, column: String, ids: List<Int>) =
+        run("SELECT * FROM $tbl WHERE $column IN ".appendArray(ids), ids)
+
+    private fun String.appendArray(list: List<Int>) = this + when (list.size) {
+        0 -> throw IllegalArgumentException("Empty list")
+        1 -> "(?)"
+        else -> StringBuffer(list.size * 3).apply {
+            append("(?")
+            for (j in 2..list.size) {
+                append(", ?")
             }
-        }
-        return run(prepare(replacedSql), sequence {
-            for (value in bindings) {
-                when (value) {
-                    is Collection<*> -> yieldAll(value)
-                    else -> yield(value)
-                }
-            }
-        }.iterator())
+            append(')')
+        }.toString()
     }
 
-    private fun run(stmt: PreparedStatement, values: Iterator<*>): Statement {
-        var i = 0
-        for (value in values) {
-            when (value) {
-                is String -> stmt.setString(++i, value)
-                is Int -> stmt.setInt(++i, value)
-            }
-        }
+    private fun Connection.run(sql: String, values: List<Int>): Statement {
+        val stmt = prepareStatement(sql)
+        values.forEachIndexed { i, v -> stmt.setInt(i + 1, v) }
         return stmt.apply { execute() }
-    }
-
-    private fun Connection.run(sql: String, vararg values: Any?) = when {
-        values.isEmpty() -> createStatement().apply { executeQuery(sql) }
-        values.hasCollection() ->
-            withCollections(sql, values) { prepareStatement(it) }
-        else -> run(prepareStatement(sql), values.iterator())
     }
 
     private fun Statement.get(): JSONObject? {
@@ -105,6 +120,4 @@ class ConfigBuilder(gatewayId: Int, conn: Connection) {
     }
 
     private fun Statement.toList() = generateSequence { get() }.toList()
-
-    private fun Array<out Any?>.hasCollection() = any { it is Collection<*> }
 }

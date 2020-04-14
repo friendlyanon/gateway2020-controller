@@ -3,6 +3,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
+import java.util.jar.Attributes.Name
 import java.util.jar.Attributes.Name.*
 
 plugins {
@@ -19,7 +20,7 @@ group = "redacted"
 version = "0.1"
 val title = "Controller"
 val vendor = "[DATA EXPUNGED]"
-val shouldRelocate = false
+val shouldRelocate = !System.getenv("SHOULD_RELOCATE").isNullOrBlank()
 
 repositories {
     mavenCentral()
@@ -54,8 +55,7 @@ application {
 }
 
 fun Jar.addVersionInfo() = manifest {
-    infix fun java.util.jar.Attributes.Name.to(value: Any) =
-        toString() to value
+    infix fun Name.to(value: Any?) = toString() to value
     attributes(
         SPECIFICATION_TITLE to title,
         SPECIFICATION_VENDOR to vendor,
