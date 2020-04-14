@@ -38,7 +38,7 @@ class ConfigBuilder(gatewayId: Int, conn: Connection) {
     }
 
     private fun processGateway(stmt: Statement) {
-        result["gateway"] = stmt.resultSet.get()!!
+        result["gateway"] = stmt.resultSet.get()
     }
 
     private fun processTable(stmt: Statement) {
