@@ -7,28 +7,18 @@ import java.sql.Statement
 
 class ConfigBuilder(gatewayId: Int, conn: Connection) {
     val result = JSONObject()
-    private val tables = arrayOf(
-        "stations",
-        "input_parameters",
-        "sensors",
-        "validations",
-        "descriptors",
-        "groups",
-        "sensor_types",
-        "units"
-    ).iterator()
+    private var tables: Iterator<String>? = null
 
     init {
         val stmt = conn.createStatement()
-        var first = true
+        var count = 0
         var isResultSet = stmt.execute("CALL `fetch_gateway`('$gatewayId')")
         while (true) {
             if (isResultSet) {
-                if (first) {
-                    processGateway(stmt)
-                    first = false
-                } else {
-                    processTable(stmt)
+                when (++count) {
+                    1 -> processGateway(stmt)
+                    2 -> processTableNames(stmt)
+                    else -> processTable(stmt)
                 }
             } else if (stmt.updateCount == -1) {
                 break
@@ -37,12 +27,22 @@ class ConfigBuilder(gatewayId: Int, conn: Connection) {
         }
     }
 
+    private fun processTableNames(stmt: Statement) {
+        val names = mutableListOf<String>()
+        stmt.resultSet.apply {
+            while (next()) {
+                names.add(getString(1))
+            }
+        }
+        tables = names.iterator()
+    }
+
     private fun processGateway(stmt: Statement) {
         result["gateway"] = stmt.resultSet.get()
     }
 
     private fun processTable(stmt: Statement) {
-        result[tables.next()] = stmt.resultSet.asSequence().toObject()
+        result[tables!!.next()] = stmt.resultSet.asSequence().toObject()
     }
 
     private fun Sequence<JSONObject>.toObject() = JSONObject().also {
