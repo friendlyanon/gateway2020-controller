@@ -1,5 +1,3 @@
-@file:Suppress("ConstantConditionIf")
-
 import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType

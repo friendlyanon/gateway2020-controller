@@ -5,8 +5,10 @@ import gateway.controller.events.MasterEventHandler
 import gateway.controller.workers.AbstractWorker
 import java.util.concurrent.SynchronousQueue
 
+// Array of size 2 arrays [[key, value], [key, value], ...]
+typealias SettingsList = List<List<String>>
+
 typealias Queue = SynchronousQueue<Event>
 typealias WorkerFactory = () -> AbstractWorker
-typealias SettingsList = List<Pair<String, String>>
 typealias StateBlock = MasterEventHandler.() -> Boolean
-typealias JSONObject = HashMap<String, Any?>
+typealias DbMap = HashMap<String, Any?>

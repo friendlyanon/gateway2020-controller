@@ -8,7 +8,7 @@ import gateway.controller.database.Storage
 import gateway.controller.events.master.DbRequestEvent
 import gateway.controller.events.master.DbRequestEvent.Type
 import gateway.controller.events.master.RestartEvent
-import gateway.controller.orchestrator.ConfigBuilder
+import gateway.controller.orchestrator.ConfigFetcher
 import gateway.controller.orchestrator.ModuleManager
 import gateway.controller.utils.Queue
 import java.sql.Connection
@@ -39,7 +39,7 @@ class Orchestrator(queue: Queue) : AbstractWorker(queue) {
     private fun makeConfigJson(conn: Connection): String {
         val gatewayId = getStorage<DbWrapper>(Type.LOCAL)
             .readOnlyUse(Table.DETAILS) { get("gatewayId")!!.toInt() }
-        val obj = ConfigBuilder(gatewayId, conn).result
+        val obj = ConfigFetcher(gatewayId, conn).result
         return jacksonObjectMapper().writeValueAsString(obj)
     }
 

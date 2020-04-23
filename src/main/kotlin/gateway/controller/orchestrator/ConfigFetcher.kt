@@ -1,12 +1,12 @@
 package gateway.controller.orchestrator
 
-import gateway.controller.utils.JSONObject
+import gateway.controller.utils.DbMap
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Statement
 
-class ConfigBuilder(gatewayId: Int, conn: Connection) {
-    val result = JSONObject()
+class ConfigFetcher(gatewayId: Int, conn: Connection) {
+    val result = DbMap()
     private var tables: Iterator<String>? = null
 
     init {
@@ -45,22 +45,22 @@ class ConfigBuilder(gatewayId: Int, conn: Connection) {
         result[tables!!.next()] = stmt.resultSet.asSequence().toObject()
     }
 
-    private fun Sequence<JSONObject>.toObject() = JSONObject().also {
-        for (obj in this) {
-            it[obj["id"].toString()] = obj
+    private fun Sequence<DbMap>.toObject() = DbMap().also {
+        for (map in this) {
+            it[map["id"].toString()] = map
         }
     }
 
-    private fun ResultSet.get(): JSONObject? {
+    private fun ResultSet.get(): DbMap? {
         if (!next()) {
             return null
         }
 
-        val obj = JSONObject()
+        val map = DbMap()
         for (i in 1..metaData.columnCount) {
-            obj[metaData.getColumnName(i)] = getObject(i)
+            map[metaData.getColumnName(i)] = getObject(i)
         }
-        return obj
+        return map
     }
 
     private fun ResultSet.asSequence() = generateSequence { get() }
