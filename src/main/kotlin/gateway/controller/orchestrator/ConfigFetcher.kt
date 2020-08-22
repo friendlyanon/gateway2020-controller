@@ -5,14 +5,17 @@ import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Statement
 
-class ConfigFetcher(gatewayId: Int, conn: Connection) {
-    val result = DbMap()
+class ConfigFetcher(
+    private val gatewayId: Int,
+    private val conn: Connection
+) {
+    private val result = DbMap()
     private var tables: Iterator<String>? = null
 
-    init {
+    fun fetch(): DbMap {
         val stmt = conn.createStatement()
         var count = 0
-        var isResultSet = stmt.execute("CALL `fetch_gateway`('$gatewayId')")
+        var isResultSet = stmt.execute("CALL \"fetch_gateway\"('$gatewayId')")
         while (true) {
             if (isResultSet) {
                 when (++count) {
@@ -25,6 +28,8 @@ class ConfigFetcher(gatewayId: Int, conn: Connection) {
             }
             isResultSet = stmt.getMoreResults(Statement.CLOSE_CURRENT_RESULT)
         }
+
+        return result
     }
 
     private fun processTableNames(stmt: Statement) {

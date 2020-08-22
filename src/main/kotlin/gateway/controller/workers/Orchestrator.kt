@@ -39,8 +39,8 @@ class Orchestrator(queue: Queue) : AbstractWorker(queue) {
     private fun makeConfigJson(conn: Connection): String {
         val gatewayId = getStorage<DbWrapper>(Type.LOCAL)
             .readOnlyUse(Table.DETAILS) { get("gatewayId")!!.toInt() }
-        val obj = ConfigFetcher(gatewayId, conn).result
-        return jacksonObjectMapper().writeValueAsString(obj)
+        val config = ConfigFetcher(gatewayId, conn)
+        return jacksonObjectMapper().writeValueAsString(config.fetch())
     }
 
     @Suppress("UNCHECKED_CAST")
