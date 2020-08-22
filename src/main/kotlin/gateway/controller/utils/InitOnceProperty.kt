@@ -8,14 +8,14 @@ class InitOnceProperty<T> : ReadWriteProperty<Any, T> {
 
     @Suppress("UNCHECKED_CAST")
     override fun getValue(thisRef: Any, property: KProperty<*>): T {
-        if (value == EMPTY) {
+        if (value === EMPTY) {
             throw IllegalStateException("Value isn't initialized")
         }
         return value as T
     }
 
     override fun setValue(thisRef: Any, property: KProperty<*>, value: T) {
-        if (this.value != EMPTY) {
+        if (this.value !== EMPTY) {
             throw IllegalStateException("Value is initialized")
         }
         this.value = value
