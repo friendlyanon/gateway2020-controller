@@ -63,7 +63,7 @@ class Master(port: Int, val localStorage: DbWrapper) : Runnable {
         val thread = object : Any() {
             override fun equals(other: Any?) = when (other) {
                 is Thread -> other == mainThread
-                else -> throw IllegalArgumentException("Expected a thread")
+                else -> false
             }
         }
     }
