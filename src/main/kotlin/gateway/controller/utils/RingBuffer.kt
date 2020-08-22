@@ -40,7 +40,9 @@ class RingBuffer<T> : Iterable<T>, /* MutableList<T>, */ Cloneable {
 
     override fun clone() = RingBuffer(this)
 
-    override fun iterator() = object : Iterator<T> {
+    override fun iterator() = RingBufferIterator()
+
+    inner class RingBufferIterator : Iterator<T> {
         private var index = 0
 
         override fun hasNext() = index < size
